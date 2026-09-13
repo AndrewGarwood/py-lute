@@ -3,7 +3,6 @@
 """
 from __future__ import annotations
 from pathlib import Path
-import sys, json
 import traceback
 from typing import (Any, Optional, TypeVar)
 import re
@@ -127,5 +126,3 @@ class LogMessage():
     def __str__(self): return self._format()
     
 LogMsg = LogMessage
-
-

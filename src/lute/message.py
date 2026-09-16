@@ -36,7 +36,7 @@ def bad_arg(value: Any, name: str, reason: str, *expected: str | type):
         f"received: type({name})={type(value)} {value=}"
     )
 
-class LogMessage():
+class LogMsg():
     _messages: list[str]
     _sep: str
     kwargs: dict[str, Any]
@@ -101,7 +101,7 @@ class LogMessage():
         if self.message:
             result["message"] = self.message
         for key, value in self.kwargs.items():
-            if isinstance(value, LogMessage):
+            if isinstance(value, LogMsg):
                 result[key] = value.to_dict()
             elif isinstance(value, Path):
                 result[key] = str(value)
@@ -125,4 +125,3 @@ class LogMessage():
 
     def __str__(self): return self._format()
     
-LogMsg = LogMessage

@@ -1,5 +1,5 @@
 """
-*`@file`* `lute/_warnings`
+*`@file`* `_warnings`
 
 `WarningManager`
 """

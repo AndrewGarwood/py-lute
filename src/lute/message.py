@@ -1,5 +1,6 @@
 """
-*`@file`* `lute/message.py`
+*`@file`* `message`
+- inspired by: [logging-cookbook](https://docs.python.org/3/howto/logging-cookbook.html#implementing-structured-logging)
 """
 from __future__ import annotations
 from pathlib import Path
@@ -7,21 +8,9 @@ import traceback
 from typing import (Any, Optional, TypeVar)
 import re
 
+from .utils import (SPACES_PER_INDENT, indented_line, count_leading_spaces, annotate)
+
 E = TypeVar("E", bound=BaseException)
-
-INDENT_LOG_LINE = f'\n\t • '
-""" = `'\\n\\t • '` """
-SPACES_PER_INDENT = 4
-SIMPLE_INDENT = (" " * SPACES_PER_INDENT) + "> "
-
-def _indented_line(indent_count: int=1, /):
-    return "\n" + " " * (SPACES_PER_INDENT * indent_count)
-
-def _leading_spaces(s: str, /) -> int:
-    return _count_leading_chars(s, char=" ")
-
-def _count_leading_chars(s: str, /, char: str=" ") -> int:
-    return len(s) - len(s.lstrip(char))
 
 def bad_arg(value: Any, name: str, reason: str, *expected: str | type):
     _expected = tuple(
@@ -33,7 +22,7 @@ def bad_arg(value: Any, name: str, reason: str, *expected: str | type):
     return (
         f"{reason} for arg '{name}'",
         f"expected: {' | '.join(_expected)}",
-        f"received: type({name})={type(value)} {value=}"
+        f"received: {annotate(value)}"
     )
 
 class LogMsg():
@@ -55,9 +44,9 @@ class LogMsg():
         self._messages = [str(m) for m in message if m is not None]
         if (not _sep):
             head = self._messages[0] if self._messages else ""
-            num_spaces = _leading_spaces(head) if head else 0
+            num_spaces = count_leading_spaces(head) if head else 0
             head_indent_count = num_spaces // SPACES_PER_INDENT if num_spaces > 4 else 0
-            _sep = _indented_line(head_indent_count + _body_offset_indents)
+            _sep = indented_line(head_indent_count + _body_offset_indents)
         self._sep = _sep
         self.kwargs = kwargs
     
@@ -94,8 +83,6 @@ class LogMsg():
         _heading = f"Failed: {type(error)}"
         return cls(_heading, *_args, **_kwargs)
     
-    
-    
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {}
         if self.message:
@@ -105,7 +92,7 @@ class LogMsg():
                 result[key] = value.to_dict()
             elif isinstance(value, Path):
                 result[key] = str(value)
-            # elif isinstance(value, (date, datetime)) -> isoformat()
+            # elif isinstance(value, (date, datetime, time)) -> isoformat()
             else:
                 result[key] = value
         return result
@@ -119,9 +106,8 @@ class LogMsg():
                 lines.append(value._format(indent))
             else:
                 lines.append(f"{pad}{key}: {str(value)}")
-        return _indented_line(1).join(lines)
+        return indented_line(1).join(lines)
     
     def __repr__(self): return self.__str__()
 
     def __str__(self): return self._format()
-    

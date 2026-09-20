@@ -2,9 +2,11 @@
 *`@file`* `utils`
 """
 from __future__ import annotations
-from pathlib import Path
+from pathlib import (Path, PurePath)
+from datetime import (datetime, date, time)
 from collections.abc import Collection, Mapping
 from typing import (Any, Callable, Iterable, Literal, Optional)
+from random import sample as random_sample
 import sys
 
 
@@ -68,54 +70,75 @@ def callsite(
     if (include_lineno): _file_info = f"{_file_info}{lineno}"
     return f"[{_file_info}{_sep}{_func_info}({_caller_detail})]"
 
-_SCAN_LIMIT = 10
-def _scan_type(items: Iterable[Any], max_scan: int=1):
-    return " | ".join(set([type(x).__name__ for x in items][:max_scan]))
+_SCAN_LIMIT = 8
+_MAX_REPR_LEN = 128
+def _scan_type(items: Iterable[Any], max_scan: int=4) -> str:
+    item_types = list(set([type(x).__name__ for x in items]))
+    n = len(item_types)
+    if (n == 1): 
+        return item_types[0]
+    return " | ".join(random_sample(item_types, k=min(n, max_scan)))
 
 def annotate(
     value: Any, 
     /, 
-    scan: int=1, 
+    sample_size: int=4, 
     placeholder: str="Unknown", 
     square_brackets: bool=False
 ) -> str:
     """ 
-    *`@param`* `scan (uint)` positive integer
+    *`@param`* `sample_size (uint) 0 <= _SCAN_LIMIT = 8`
+        - used when `value` is a `Collection` to sample its elements' types 
     
     *`@returns`* `info (str)`
-    - `'{value.__name__} ({name})'` if `value` is `Callable`
-    - `'{value} ({name})'` if `value` is `(str, int, float, bool, None)`
-    - `'{name}'` if `value` is not a `Collection`
-    - `'{name}<{K}, {V}>({size})'` if `value` is `Mapping<K, V>`
-    - `'{name}<{T}>({size})'` if `value` is `Iterable<T>`
-    - `'{name}<{placeholder}>({size})'` otherwise
+    - `'{value.__name__} <{type}>'` if `value` is `Callable`
+    - `'{value.isoformat()} <{type}>'` if `value` is `(date, datetime, time)`
+    - `'{value} <{type}>'` if `value` is `(int, float, bool, None)`
+    - `'{value[:_MAX_REPR_LEN]} {type}<{T}>({size})'` if `value` is `(str, bytes, bytearray)`
+    - `'{type}'` if `value` is not a `Collection`
+    - `'{type}<{K}, {V}>({size})'` if `value` is `Mapping<K, V>`
+    - `'{type}<{T}>({size})'` if `value` is `Iterable<T>`
+    - `'{type}<{placeholder}>({size})'` otherwise
     """
     left, right = ("[", "]") if square_brackets else ("<", ">")
     name = type(value).__name__
     if (isinstance(value, Callable)):
-        return f"{value.__name__} ({name})"
-    if (isinstance(value, (str, int, float, bool, type(None)))):
-        return f"{value} ({name})"
+        return f"{value.__name__} {left}{name}{right}"
+    if (isinstance(value, (date, datetime, time))):
+        return f"{value.isoformat()} {left}{name}{right}"
+    if (isinstance(value, (Path, PurePath))):
+        pathstr = str(value)
+        size = len(pathstr)
+        _repr = (
+            pathstr if size <= _MAX_REPR_LEN
+            else f". . .{pathstr[size-_MAX_REPR_LEN:]}"
+        )
+        return f"'{_repr}' {left}{name}{right}"
+    if (isinstance(value, (int, float, bool, type(None)))):
+        return f"{value} {left}{name}{right}"
     if (not isinstance(value, Collection)): 
         return name
     size = len(value)
+    if (isinstance(value, (str, bytes, bytearray))):
+        _repr = (
+            value if size <= _MAX_REPR_LEN
+            else f"{value[:_MAX_REPR_LEN]}. . ."
+        )
+        return f"'{_repr}' {left}{name}{right}({size})"
     result = "".join([name, left, "{}", right, f"({size})"])
-    if (scan < 0): 
-        scan = abs(scan)
-    elif (scan == 0): 
-        scan = 1
-    
-    if (scan > size):
-        scan = min(_SCAN_LIMIT, (scan % size))
+    if (sample_size < 0): 
+        sample_size = abs(sample_size)
+    if (size and sample_size > size):
+        sample_size = min(_SCAN_LIMIT, (sample_size % size))
     if (isinstance(value, Mapping)):
-        if (size):
-            k = _scan_type(value.keys(), scan) or placeholder
-            v = _scan_type(value.values(), scan) or placeholder
+        if (size and sample_size):
+            k = _scan_type(value.keys(), sample_size) or placeholder
+            v = _scan_type(value.values(), sample_size) or placeholder
         else:
             k, v = placeholder, placeholder
         return result.format(f"{k}, {v}")
     if (isinstance(value, Iterable)):
-        if not size:
+        if (not size or not sample_size):
             return result.format(placeholder)
-        return result.format(_scan_type(value, scan))
+        return result.format(_scan_type(value, sample_size))
     return result.format(placeholder)

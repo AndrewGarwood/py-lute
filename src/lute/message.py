@@ -20,7 +20,7 @@ def bad_arg(value: Any, name: str, reason: str, *expected: str | type):
         for x in expected
     )
     return (
-        f"{reason} for arg '{name}'",
+        f"{reason} for '{name}'",
         f"expected: {' | '.join(_expected)}",
         f"received: {annotate(value)}"
     )
@@ -29,6 +29,28 @@ class LogMsg():
     _messages: list[str]
     _sep: str
     kwargs: dict[str, Any]
+    
+    @classmethod
+    def bad_arg(
+        cls,
+        value: Any, 
+        name: str, 
+        /, 
+        reason: str, 
+        *expected: str | type
+    ):
+        # return cls(*bad_arg(value, name, reason, *expected))
+        _expected = tuple(
+            x if isinstance(x, str) 
+            else str(x.__name__) if hasattr(x, "__name__") 
+            else str(x) 
+            for x in expected
+        )
+        return cls(
+            f"{reason} for '{name}'",
+            expected=' | '.join(_expected),
+            received=annotate(value)
+        )
     
     @property
     def message(self) -> str:

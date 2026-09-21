@@ -101,11 +101,11 @@ def annotate(
     - `'{type}<{placeholder}>({size})'` otherwise
     """
     left, right = ("[", "]") if square_brackets else ("<", ">")
-    name = type(value).__name__
+    tname = f"{left}{type(value).__name__}{right}"
     if (isinstance(value, Callable)):
-        return f"{value.__name__} {left}{name}{right}"
+        return f"{value.__name__} {tname}"
     if (isinstance(value, (date, datetime, time))):
-        return f"{value.isoformat()} {left}{name}{right}"
+        return f"{value.isoformat()} {tname}"
     if (isinstance(value, (Path, PurePath))):
         pathstr = str(value)
         size = len(pathstr)
@@ -113,19 +113,20 @@ def annotate(
             pathstr if size <= _MAX_REPR_LEN
             else f". . .{pathstr[size-_MAX_REPR_LEN:]}"
         )
-        return f"'{_repr}' {left}{name}{right}"
+        return f"'{_repr}' {tname}"
     if (isinstance(value, (int, float, bool, type(None)))):
-        return f"{value} {left}{name}{right}"
-    if (not isinstance(value, Collection)): 
-        return name
+        return f"{value} {tname}"
+    if (not isinstance(value, Collection)):
+        _detail = getattr(value, "name", None)
+        return f"{_detail} {tname}" if _detail else tname
     size = len(value)
     if (isinstance(value, (str, bytes, bytearray))):
         _repr = (
             value if size <= _MAX_REPR_LEN
             else f"{value[:_MAX_REPR_LEN]}. . ."
         )
-        return f"'{_repr}' {left}{name}{right}({size})"
-    result = "".join([name, left, "{}", right, f"({size})"])
+        return f"'{_repr}' {tname}({size})"
+    result = "".join([tname, left, "{}", right, f"({size})"])
     if (sample_size < 0): 
         sample_size = abs(sample_size)
     if (size and sample_size > size):

@@ -68,7 +68,7 @@ DEFAULT_MESSAGE_FORMAT = "[%(name)s.%(funcName)s] %(message)s"
 DEFAULT_DATE_FORMAT = "[%X]"
 
 def get_logger(
-    name: str,
+    name: str | Path,
     /,
     level: LogLevel = LogLevel.DEBUG,
     file: Optional[StrPath]=None,
@@ -83,7 +83,7 @@ def get_logger(
     }
 ) -> logging.Logger:
     
-    logger = logging.getLogger(name)
+    logger = logging.getLogger(name if isinstance(name, str) else name.stem)
     logger.setLevel(level)
     
     if (use_existing and logger.hasHandlers()): 

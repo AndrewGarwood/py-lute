@@ -47,7 +47,7 @@ class LogMsg():
             for x in expected
         )
         return cls(
-            f"{reason} for '{name}'",
+            f"Bad argument for '{name}': {reason}",
             expected=' | '.join(_expected),
             received=annotate(value)
         )

@@ -79,6 +79,10 @@ def _scan_type(items: Iterable[Any], max_scan: int=4) -> str:
         return item_types[0]
     return " | ".join(random_sample(item_types, k=min(n, max_scan)))
 
+_DETAIL_ATTRS = [
+    "name", "__name__", # "id", "type"
+]
+
 def annotate(
     value: Any, 
     /, 
@@ -102,6 +106,7 @@ def annotate(
     """
     left, right = ("[", "]") if square_brackets else ("<", ">")
     tname = f"{left}{type(value).__name__}{right}"
+    if value is None: return tname
     if (isinstance(value, Callable)):
         return f"{value.__name__} {tname}"
     if (isinstance(value, (date, datetime, time))):
@@ -117,8 +122,11 @@ def annotate(
     if (isinstance(value, (int, float, bool, type(None)))):
         return f"{value} {tname}"
     if (not isinstance(value, Collection)):
-        _detail = getattr(value, "name", None)
-        return f"{_detail} {tname}" if _detail else tname
+        _detail = {
+            k: getattr(value, k, None)
+            for k in _DETAIL_ATTRS
+        }
+        return f"{_detail} {tname}" if any(_detail.values()) else tname
     size = len(value)
     if (isinstance(value, (str, bytes, bytearray))):
         _repr = (

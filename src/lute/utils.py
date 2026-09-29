@@ -107,6 +107,8 @@ def annotate(
     left, right = ("[", "]") if square_brackets else ("<", ">")
     tname = f"{left}{type(value).__name__}{right}"
     if value is None: return tname
+    if (isinstance(value, BaseException)):
+        return f"{tname} {str(value)}"
     if (isinstance(value, Callable)):
         return f"{value.__name__} {tname}"
     if (isinstance(value, (date, datetime, time))):

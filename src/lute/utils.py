@@ -1,7 +1,6 @@
 """
 *`@file`* `utils`
 """
-from __future__ import annotations
 from pathlib import (Path, PurePath)
 from datetime import (datetime, date, time)
 from collections.abc import Collection, Mapping

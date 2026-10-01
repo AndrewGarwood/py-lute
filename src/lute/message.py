@@ -2,7 +2,6 @@
 *`@file`* `message`
 - inspired by: [logging-cookbook](https://docs.python.org/3/howto/logging-cookbook.html#implementing-structured-logging)
 """
-from __future__ import annotations
 from pathlib import Path
 import traceback
 from typing import (Any, Optional, TypeVar)

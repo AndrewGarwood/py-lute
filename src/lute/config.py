@@ -1,7 +1,6 @@
 """
 *`@file`* `config`
 """
-from __future__ import annotations
 import logging
 from enum import IntEnum
 from pathlib import Path

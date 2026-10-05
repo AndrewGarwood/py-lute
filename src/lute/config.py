@@ -67,7 +67,7 @@ DEFAULT_MESSAGE_FORMAT = "[%(name)s.%(funcName)s] %(message)s"
 DEFAULT_DATE_FORMAT = "[%X]"
 
 def get_logger(
-    name: str | Path,
+    name: StrPath,
     /,
     level: LogLevel = LogLevel.DEBUG,
     file: Optional[StrPath]=None,
@@ -79,10 +79,22 @@ def get_logger(
         "rich_tracebacks": True,
         "show_path": False,
         "tracebacks_show_locals": False,
-    }
+    },
+    name_depth: Optional[int]=None
 ) -> logging.Logger:
-    
-    logger = logging.getLogger(name if isinstance(name, str) else name.stem)
+    """
+    `logger = logging.getLogger(_resolve_logger_name(name, depth=(name_depth or 0)))`
+    ```
+    p = Path(r"C:/example/reports/inventory/main.py")
+    depth<=0 → "main"
+    depth=1 → "inventory"
+    depth=2 → "reports"
+    depth=3 → "example"
+    depth=4 → "C:"
+    depth=99 → "C:"  # clamped
+    ```
+    """
+    logger = logging.getLogger(_resolve_logger_name(name, depth=(name_depth or 0)))
     logger.setLevel(level)
     
     if (use_existing and logger.hasHandlers()): 
@@ -141,3 +153,13 @@ def attach_file_handler(
     h.setLevel(level)
     logger.addHandler(h)
     return None
+
+
+def _resolve_logger_name(name: StrPath, /, depth: int=0) -> str:
+    p = Path(name)
+    if (depth <= 0):
+        return p.stem
+    parents = p.parents
+    depth = min(depth, len(parents))
+    ancestor = parents[depth-1]
+    return ancestor.name

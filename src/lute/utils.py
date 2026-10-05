@@ -104,7 +104,7 @@ def annotate(
     - `'{type}<{placeholder}>({size})'` otherwise
     """
     left, right = ("[", "]") if square_brackets else ("<", ">")
-    tname = f"{left}{type(value).__name__}{right}"
+    tname = f"{left}{resolve_type_text(type(value))}{right}"
     if value is None: return tname
     if (isinstance(value, BaseException)):
         return f"{tname} {str(value)}"
@@ -152,3 +152,24 @@ def annotate(
             return result.format(placeholder)
         return result.format(_scan_type(value, sample_size))
     return result.format(placeholder)
+
+
+
+def resolve_type_text(x: str | type, /) -> str:
+    """
+    e.g.
+    ```
+    >>> DesktopBackend: TypeAlias = str | Literal["uia", "win32"]
+    >>> getattr(DesktopBackend, "__name__")
+    Union
+    >>> print(str(DesktopBackend))
+    typing.Union[str, typing.Literal['uia', 'win32']] # more informative
+    ```
+    """
+    if (isinstance(x, str)):
+        return x
+    dunder_name = getattr(x, "__name__", None)
+    if (dunder_name is None):
+        return str(x)
+    dunder_name = str(dunder_name)
+    return (str(x) if dunder_name.lower() == "union" else dunder_name)

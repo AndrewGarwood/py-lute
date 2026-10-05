@@ -7,20 +7,14 @@ import traceback
 from typing import (Any, Optional, TypeVar)
 import re
 
-from .utils import (SPACES_PER_INDENT, indented_line, count_leading_spaces, annotate)
+from .utils import (SPACES_PER_INDENT, indented_line, count_leading_spaces, annotate, resolve_type_text)
 
 E = TypeVar("E", bound=BaseException)
 
 def bad_arg(value: Any, name: str, reason: str, *expected: str | type):
-    _expected = tuple(
-        x if isinstance(x, str) 
-        else str(x.__name__) if hasattr(x, "__name__") 
-        else str(x) 
-        for x in expected
-    )
     return (
         f"{reason} for '{name}'",
-        f"expected: {' | '.join(_expected)}",
+        f"expected: {' | '.join(resolve_type_text(x) for x in expected)}",
         f"received: {annotate(value)}"
     )
 

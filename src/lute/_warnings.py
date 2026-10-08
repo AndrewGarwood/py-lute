@@ -20,6 +20,7 @@ class WarningManager():
     @classmethod def ignore(cls, *message: str)
     @classmethod def clear(cls, *action: WarningAction)
     @classmethod def remove_filter(cls, action: WarningAction, *message: str)
+    # TODO: can just use `with warnings.catch_warnings()`: warnings.filterwarnings(...) ? 
     ```
     """
     _filters = WarningFilters(ignore=set(), once=set())

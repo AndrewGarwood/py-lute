@@ -153,11 +153,15 @@ def annotate(
         return result.format(_scan_type(value, sample_size))
     return result.format(placeholder)
 
-
+_TYPE_ALIAS_NAMES = set([
+    "UnionType", 
+    "_UnionGenericAlias", 
+    "_LiteralGenericAlias"
+])
 
 def resolve_type_text(x: str | type, /) -> str:
     """
-    e.g.
+    motivation:
     ```
     >>> DesktopBackend: TypeAlias = str | Literal["uia", "win32"]
     >>> getattr(DesktopBackend, "__name__")
@@ -169,7 +173,15 @@ def resolve_type_text(x: str | type, /) -> str:
     if (isinstance(x, str)):
         return x
     dunder_name = getattr(x, "__name__", None)
+    _type_str = str(x)
+    if _type_str.startswith("<class"):
+        return x.__name__
+    if _type_str.startswith("typing."):
+        return _type_str.replace("typing.", "", 1)
     if (dunder_name is None):
-        return str(x)
+        return _type_str
     dunder_name = str(dunder_name)
-    return (str(x) if dunder_name.lower() == "union" else dunder_name)
+    return (
+        _type_str if dunder_name in _TYPE_ALIAS_NAMES
+        else dunder_name
+    )

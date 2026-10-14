@@ -109,7 +109,12 @@ def annotate(
     if (isinstance(value, BaseException)):
         return f"{tname} {str(value)}"
     if (isinstance(value, Callable)):
-        return f"{value.__name__} {tname}"
+        callable_name = getattr(
+            value, 
+            "__qualname__",
+            getattr(value, "__name__", "<anonymous>")
+        )
+        return f"{callable_name} {tname}"
     if (isinstance(value, (date, datetime, time))):
         return f"{value.isoformat()} {tname}"
     if (isinstance(value, (Path, PurePath))):

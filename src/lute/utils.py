@@ -161,7 +161,8 @@ def annotate(
 _TYPE_ALIAS_NAMES = set([
     "UnionType", 
     "_UnionGenericAlias", 
-    "_LiteralGenericAlias"
+    "_LiteralGenericAlias",
+    "_GenericAlias"
 ])
 
 def resolve_type_text(x: str | type, /) -> str:

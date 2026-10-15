@@ -7,7 +7,13 @@ import traceback
 from typing import (Any, Optional, TypeVar)
 import re
 
-from .utils import (SPACES_PER_INDENT, indented_line, count_leading_spaces, annotate, resolve_type_text)
+from .utils import (
+    SPACES_PER_INDENT, 
+    indented_line, 
+    count_leading_spaces, 
+    annotate, 
+    resolve_type_text
+)
 
 E = TypeVar("E", bound=BaseException)
 
@@ -53,7 +59,7 @@ class LogMsg():
         self, 
         *message: str | Any, 
         _sep: Optional[str]=None, 
-        _body_offset_indents: int=2, 
+        _body_offset_indents: int=0, 
         **kwargs
     ):
         self._messages = [str(m) for m in message if m is not None]
@@ -112,16 +118,16 @@ class LogMsg():
                 result[key] = value
         return result
     
-    def _format(self, indent: int = 4) -> str:
-        pad = " " * indent
+    def _format(self, pad_spaces: int = 0) -> str:
+        pad = " " * pad_spaces
         lines = [self.message] #INDENT_LOG_LINE.split(self.message) if INDENT_LOG_LINE in self.message else [self.message]
         for key, value in self.kwargs.items():
             if hasattr(value, "_format"):
                 lines.append(f"{pad}{key}:")
-                lines.append(value._format(indent))
+                lines.append(value._format(pad_spaces))
             else:
                 lines.append(f"{pad}{key}: {str(value)}")
-        return indented_line(1).join(lines)
+        return indented_line(0).join(lines)
     
     def __repr__(self): return self.__str__()
 

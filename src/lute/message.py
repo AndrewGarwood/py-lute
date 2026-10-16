@@ -28,6 +28,21 @@ class LogMsg():
     _messages: list[str]
     _sep: str
     kwargs: dict[str, Any]
+
+    def __init__(
+        self, 
+        *message: str | Any, 
+        _sep: Optional[str]=None, 
+        **kwargs
+    ):
+        self._messages = [str(m) for m in message if m is not None]
+        if (not _sep):
+            head = self._messages[0] if self._messages else ""
+            num_spaces = count_leading_spaces(head) if head else 0
+            head_indent_count = num_spaces // SPACES_PER_INDENT if num_spaces > SPACES_PER_INDENT else 0
+            _sep = indented_line(head_indent_count) #  + _body_offset_indents
+        self._sep = _sep
+        self.kwargs = kwargs
     
     @classmethod
     def bad_arg(
@@ -54,22 +69,6 @@ class LogMsg():
     @property
     def message(self) -> str:
         return self._sep.join(self._messages)
-    
-    def __init__(
-        self, 
-        *message: str | Any, 
-        _sep: Optional[str]=None, 
-        _body_offset_indents: int=0, 
-        **kwargs
-    ):
-        self._messages = [str(m) for m in message if m is not None]
-        if (not _sep):
-            head = self._messages[0] if self._messages else ""
-            num_spaces = count_leading_spaces(head) if head else 0
-            head_indent_count = num_spaces // SPACES_PER_INDENT if num_spaces > 4 else 0
-            _sep = indented_line(head_indent_count + _body_offset_indents)
-        self._sep = _sep
-        self.kwargs = kwargs
     
     @classmethod
     def err(
@@ -127,7 +126,7 @@ class LogMsg():
                 lines.append(value._format(pad_spaces))
             else:
                 lines.append(f"{pad}{key}: {str(value)}")
-        return indented_line(0).join(lines)
+        return indented_line(1).join(lines)
     
     def __repr__(self): return self.__str__()
 

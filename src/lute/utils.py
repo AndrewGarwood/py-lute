@@ -104,11 +104,15 @@ def annotate(
     - `'{type}<{placeholder}>({size})'` otherwise
     """
     left, right = ("[", "]") if square_brackets else ("<", ">")
-    tname = f"{left}{resolve_type_text(type(value))}{right}"
+    if (isinstance(value, type)):
+        return f"{left}{value.__qualname__}{right}"
+    value_type = type(value)
+    tname = f"{left}{resolve_type_text(value_type)}{right}"
     if value is None: return tname
     if (isinstance(value, BaseException)):
         return f"{tname} {str(value)}"
-    if (isinstance(value, Callable)):
+    
+    if (value_type.__name__ == "function"):
         callable_name = getattr(
             value, 
             "__qualname__",

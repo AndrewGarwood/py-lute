@@ -107,7 +107,8 @@ def annotate(
     if (isinstance(value, type)):
         return f"{left}{value.__qualname__}{right}"
     value_type = type(value)
-    tname = f"{left}{resolve_type_text(value_type)}{right}"
+    _resolved_type_text = resolve_type_text(value_type)
+    tname = f"{left}{_resolved_type_text}{right}"
     if value is None: return tname
     if (isinstance(value, BaseException)):
         return f"{tname} {str(value)}"
@@ -144,7 +145,8 @@ def annotate(
             else f"{value[:_MAX_REPR_LEN]}. . ."
         )
         return f"'{_repr}' {tname}({size})"
-    result = "".join([tname, left, "{}", right, f"({size})"])
+    
+    result = "".join([_resolved_type_text, left, "{}", right, f"({size})"])
     if (sample_size < 0): 
         sample_size = abs(sample_size)
     if (size and sample_size > size):

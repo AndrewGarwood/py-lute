@@ -6,7 +6,7 @@ from datetime import (datetime, date, time)
 from collections.abc import Collection, Mapping
 from typing import (Any, Callable, Iterable, Literal, Optional)
 from random import sample as random_sample
-import sys
+import sys, inspect
 
 
 INDENT_LOG_LINE = f'\n\t • '
@@ -119,7 +119,10 @@ def annotate(
             "__qualname__",
             getattr(value, "__name__", "<anonymous>")
         )
-        return f"{callable_name} {tname}"
+        return "\n > ".join([
+            f"{callable_name} {tname}",
+            f"function argspec: {inspect.getfullargspec(value)}"
+        ])
     if (isinstance(value, (date, datetime, time))):
         return f"{value.isoformat()} {tname}"
     if (isinstance(value, (Path, PurePath))):
